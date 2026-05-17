@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: To-do Listen Verwaltung API
+  version: 1.0.0
+  description: REST API for an API-first to-do list application using Flask and SQLite.
+servers:
+  - url: http://localhost:5000
+tags:
+  - name: Health
+  - name: Todos
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Check whether the backend is running
+      responses:
+        "200":
+          description: Backend is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /api/openapi.yaml:
+    get:
+      tags:
+        - Health
+      summary: Get the OpenAPI description
+      responses:
+        "200":
+          description: OpenAPI YAML document
+          content:
+            text/yaml:
+              schema:
+                type: string
+  /api/todos:
+    get:
+      tags:
+        - Todos
+      summary: Get all todos
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [all, open, completed]
+            default: all
+          description: Filter todos by completion status.
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+          description: Filter todos by priority.
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search text in todo title or description.
+      responses:
+        "200":
+          description: List of todos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Todos
+      summary: Create a new todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoCreate"
+      responses:
+        "201":
+          description: Todo created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/todos/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TodoId"
+    get:
+      tags:
+        - Todos
+      summary: Get one todo by ID
+      responses:
+        "200":
+          description: Todo found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Todos
+      summary: Replace or update a whole todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoUpdate"
+      responses:
+        "200":
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - Todos
+      summary: Partially update a todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoPatch"
+      responses:
+        "200":
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Todos
+      summary: Delete a todo
+      responses:
+        "204":
+          description: Todo deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  parameters:
+    TodoId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Numeric todo ID.
+  schemas:
+    Todo:
+      type: object
+      required:
+        - id
+        - title
+        - completed
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Web-Technologien Projekt vorbereiten
+        description:
+          type: string
+          nullable: true
+          example: OpenAPI, Flask backend und Frontend erstellen
+        completed:
+          type: boolean
+          example: false
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          example: 2026-05-20
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: high
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-05-17T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-05-17T12:00:00Z
+    TodoCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+    TodoUpdate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+    TodoPatch:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high]
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: ValidationError
+        message:
+          type: string
+          example: Title is required.
+  responses:
+    BadRequest:
+      description: Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Todo does not exist
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
