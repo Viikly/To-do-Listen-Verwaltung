@@ -77,7 +77,7 @@ python -m venv .venv
 Windows PowerShell:
 
 ```powershell
-.venv\Scripts\Activate.ps1
+.venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
