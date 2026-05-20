@@ -9,6 +9,28 @@ tags:
   - name: Health
   - name: Todos
 paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: Get a short API welcome message
+      responses:
+        "200":
+          description: API welcome message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: Todo API
+                  status:
+                    type: string
+                    example: running
+                  message:
+                    type: string
+                    example: Use /api/todos to access the Todo API.
   /api/health:
     get:
       tags:

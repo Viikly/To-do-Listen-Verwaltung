@@ -9,7 +9,8 @@ This project is an API-first web application for managing to-do tasks. It was bu
 - Database: SQLite
 - Frontend: Vue.js 3 SPA
 - Frontend routing: Vue Router
-- API communication: `fetch()`
+- Frontend styling: Bootstrap 5
+- API communication: `fetch()` with `async/await`
 
 ## Architecture
 
@@ -96,6 +97,12 @@ The backend runs at:
 http://localhost:5000
 ```
 
+The root route also returns a short JSON message for presentation:
+
+```text
+GET http://localhost:5000/
+```
+
 ## Frontend Setup
 
 Install dependencies and start the Vue development server:
@@ -122,11 +129,14 @@ The Vue app uses these routes:
 | `/todos/:id` | View and edit one todo |
 | `/about` | Project and architecture information |
 
+Bootstrap is imported in `frontend/src/main.js`. API calls are centralized in `frontend/src/services/todoApi.js` and use clean Promise handling with `async/await`. Views load backend data with Vue lifecycle hooks such as `onMounted()`.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Health check |
+| `GET` | `/` | API welcome message |
 | `GET` | `/api/openapi.yaml` | OpenAPI document |
 | `GET` | `/api/todos` | Read all todos |
 | `GET` | `/api/todos/{id}` | Read one todo |

@@ -12,6 +12,7 @@ const props = defineProps({
 
 const router = useRouter();
 const loading = ref(false);
+const saving = ref(false);
 const error = ref("");
 const form = reactive({
   title: "",
@@ -41,6 +42,7 @@ async function loadTodo() {
 
 async function saveTodo() {
   error.value = "";
+  saving.value = true;
 
   try {
     await updateTodo(props.id, {
@@ -53,6 +55,8 @@ async function saveTodo() {
     router.push("/todos");
   } catch (err) {
     error.value = err.message;
+  } finally {
+    saving.value = false;
   }
 }
 
@@ -73,41 +77,51 @@ onMounted(loadTodo);
 </script>
 
 <template>
-  <main class="panel">
-    <h2>Edit Todo</h2>
-    <p v-if="loading" class="message">Loading todo...</p>
-    <p v-if="error" class="message error">{{ error }}</p>
-
-    <form v-if="!loading" class="todo-form" @submit.prevent="saveTodo">
-      <label>
-        Title
-        <input v-model.trim="form.title" type="text" maxlength="120" required>
-      </label>
-      <label>
-        Description
-        <textarea v-model.trim="form.description" rows="4"></textarea>
-      </label>
-      <label>
-        Due date
-        <input v-model="form.dueDate" type="date">
-      </label>
-      <label>
-        Priority
-        <select v-model="form.priority">
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </label>
-      <label class="inline-check">
-        <input v-model="form.completed" type="checkbox">
-        Completed
-      </label>
-      <div class="form-actions">
-        <button type="submit">Save</button>
-        <button class="danger-button" type="button" @click="removeTodo">Delete</button>
-        <RouterLink class="button secondary-button" to="/todos">Back</RouterLink>
+  <main class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h4 card-title mb-3">Edit Todo</h2>
+      <div v-if="loading" class="alert alert-info d-flex align-items-center gap-2" role="status">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>Loading todo...</span>
       </div>
-    </form>
+      <div v-if="error" class="alert alert-danger" role="alert">{{ error }}</div>
+
+      <form v-if="!loading" class="row g-3" @submit.prevent="saveTodo">
+        <div class="col-12">
+          <label class="form-label" for="edit-title">Title</label>
+          <input id="edit-title" v-model.trim="form.title" class="form-control" type="text" maxlength="120" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="edit-description">Description</label>
+          <textarea id="edit-description" v-model.trim="form.description" class="form-control" rows="4"></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="edit-due-date">Due date</label>
+          <input id="edit-due-date" v-model="form.dueDate" class="form-control" type="date">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="edit-priority">Priority</label>
+          <select id="edit-priority" v-model="form.priority" class="form-select">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <div class="form-check">
+            <input id="edit-completed" v-model="form.completed" class="form-check-input" type="checkbox">
+            <label class="form-check-label" for="edit-completed">Completed</label>
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-2 flex-wrap">
+          <button class="btn btn-primary" type="submit" :disabled="saving">
+            <span v-if="saving" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            {{ saving ? "Saving..." : "Save" }}
+          </button>
+          <button class="btn btn-outline-danger" type="button" @click="removeTodo">Delete</button>
+          <RouterLink class="btn btn-outline-secondary" to="/todos">Back</RouterLink>
+        </div>
+      </form>
+    </div>
   </main>
 </template>

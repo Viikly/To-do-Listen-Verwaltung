@@ -1,4 +1,16 @@
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://127.0.0.1:5000/api";
+
+async function handleResponse(response) {
+  if (response.status === 204) {
+    return null;
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -9,18 +21,10 @@ async function request(path, options = {}) {
     ...options,
   });
 
-  if (response.status === 204) {
-    return null;
-  }
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.message || "API request failed.");
-  }
-  return data;
+  return handleResponse(response);
 }
 
-export function getTodos(params = {}) {
+export async function getTodos(params = {}) {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) {
@@ -28,36 +32,36 @@ export function getTodos(params = {}) {
     }
   });
   const query = searchParams.toString();
-  return request(`/todos${query ? `?${query}` : ""}`);
+  return await request(`/todos${query ? `?${query}` : ""}`);
 }
 
-export function getTodo(id) {
-  return request(`/todos/${id}`);
+export async function getTodo(id) {
+  return await request(`/todos/${id}`);
 }
 
-export function createTodo(todo) {
-  return request("/todos", {
+export async function createTodo(todo) {
+  return await request("/todos", {
     method: "POST",
     body: JSON.stringify(todo),
   });
 }
 
-export function updateTodo(id, todo) {
-  return request(`/todos/${id}`, {
+export async function updateTodo(id, todo) {
+  return await request(`/todos/${id}`, {
     method: "PUT",
     body: JSON.stringify(todo),
   });
 }
 
-export function patchTodo(id, partialTodo) {
-  return request(`/todos/${id}`, {
+export async function patchTodo(id, partialTodo) {
+  return await request(`/todos/${id}`, {
     method: "PATCH",
     body: JSON.stringify(partialTodo),
   });
 }
 
-export function deleteTodo(id) {
-  return request(`/todos/${id}`, {
+export async function deleteTodo(id) {
+  return await request(`/todos/${id}`, {
     method: "DELETE",
   });
 }

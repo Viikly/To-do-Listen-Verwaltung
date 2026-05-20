@@ -11,6 +11,17 @@ def error_response(error, message, status_code):
     return jsonify({"error": error, "message": message}), status_code
 
 
+@api.get("/")
+def root():
+    return jsonify(
+        {
+            "name": "Todo API",
+            "status": "running",
+            "message": "Use /api/todos to access the Todo API.",
+        }
+    )
+
+
 @api.get("/api/health")
 def health():
     return jsonify({"status": "ok"})
