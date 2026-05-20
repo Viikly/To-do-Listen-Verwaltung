@@ -42,27 +42,27 @@ http://localhost:5000/api/openapi.yaml
 
 ```text
 .
-├── backend/
-│   ├── app.py
-│   ├── routes.py
-│   ├── todo_service.py
-│   ├── todo_repository.py
-│   ├── database.py
-│   ├── openapi.yaml
-│   └── requirements.txt
-├── frontend/
-│   ├── package.json
-│   ├── index.html
-│   └── src/
-│       ├── main.js
-│       ├── App.vue
-│       ├── router/
-│       ├── services/
-│       ├── views/
-│       └── assets/
-├── version/
-├── .gitignore
-└── README.md
+backend/
+  app.py
+  routes.py
+  todo_service.py
+  todo_repository.py
+  database.py
+  openapi.yaml
+  requirements.txt
+frontend/
+  package.json
+  vite.config.js
+  index.html
+  src/
+    main.js
+    App.vue
+    router/
+    services/
+    views/
+    assets/
+.gitignore
+README.md
 ```
 
 ## Backend Setup
