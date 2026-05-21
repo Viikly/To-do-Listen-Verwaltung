@@ -20,6 +20,8 @@ def init_db():
                 title TEXT NOT NULL,
                 description TEXT,
                 completed INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'todo',
+                archived INTEGER NOT NULL DEFAULT 0,
                 due_date TEXT,
                 priority TEXT DEFAULT 'medium',
                 created_at TEXT NOT NULL,
@@ -27,3 +29,26 @@ def init_db():
             )
             """
         )
+        ensure_column(connection, "status", "TEXT NOT NULL DEFAULT 'todo'")
+        ensure_column(connection, "archived", "INTEGER NOT NULL DEFAULT 0")
+        connection.execute(
+            """
+            UPDATE todos
+            SET status = CASE WHEN completed = 1 THEN 'done' ELSE 'todo' END
+            WHERE status IS NULL OR status = ''
+            """
+        )
+        connection.execute(
+            """
+            UPDATE todos
+            SET status = 'done'
+            WHERE completed = 1 AND status = 'todo'
+            """
+        )
+
+
+def ensure_column(connection, column_name, column_definition):
+    columns = connection.execute("PRAGMA table_info(todos)").fetchall()
+    existing_columns = {column["name"] for column in columns}
+    if column_name not in existing_columns:
+        connection.execute(f"ALTER TABLE todos ADD COLUMN {column_name} {column_definition}")

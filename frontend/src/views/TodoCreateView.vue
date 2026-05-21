@@ -11,6 +11,7 @@ const form = reactive({
   description: "",
   dueDate: "",
   priority: "medium",
+  status: "todo",
 });
 
 async function submitTodo() {
@@ -23,6 +24,7 @@ async function submitTodo() {
       description: form.description || null,
       dueDate: form.dueDate || null,
       priority: form.priority,
+      status: form.status,
     });
     router.push(`/todos/${created.id}`);
   } catch (err) {
@@ -58,6 +60,14 @@ async function submitTodo() {
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="todo-status">Status</label>
+          <select id="todo-status" v-model="form.status" class="form-select">
+            <option value="todo">To-do</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
           </select>
         </div>
         <div class="col-12 d-flex gap-2">

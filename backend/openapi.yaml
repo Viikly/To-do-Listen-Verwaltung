@@ -69,15 +69,40 @@ paths:
           name: status
           schema:
             type: string
-            enum: [all, open, completed]
+            enum: [all, todo, in_progress, done]
             default: all
-          description: Filter todos by completion status.
+          description: Filter todos by workflow status.
+        - in: query
+          name: archived
+          schema:
+            type: string
+            enum: ["true", "false"]
+            default: "false"
+          description: Filter archived or active todos.
         - in: query
           name: priority
           schema:
             type: string
             enum: [low, medium, high]
           description: Filter todos by priority.
+        - in: query
+          name: dueDate
+          schema:
+            type: string
+            format: date
+          description: Filter todos with exactly this due date.
+        - in: query
+          name: dueBefore
+          schema:
+            type: string
+            format: date
+          description: Filter todos due on or before this date.
+        - in: query
+          name: dueAfter
+          schema:
+            type: string
+            format: date
+          description: Filter todos due on or after this date.
         - in: query
           name: q
           schema:
@@ -115,6 +140,20 @@ paths:
                 $ref: "#/components/schemas/Todo"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/todos/stats:
+    get:
+      tags:
+        - Todos
+      summary: Get todo statistics
+      responses:
+        "200":
+          description: Todo statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoStats"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /api/todos/{id}:
@@ -209,6 +248,8 @@ components:
         - id
         - title
         - completed
+        - status
+        - archived
         - createdAt
         - updatedAt
       properties:
@@ -223,6 +264,13 @@ components:
           nullable: true
           example: OpenAPI, Flask backend und Frontend erstellen
         completed:
+          type: boolean
+          example: false
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+          example: in_progress
+        archived:
           type: boolean
           example: false
         dueDate:
@@ -261,6 +309,13 @@ components:
           type: string
           enum: [low, medium, high]
           default: medium
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+          default: todo
+        archived:
+          type: boolean
+          default: false
     TodoUpdate:
       type: object
       required:
@@ -273,6 +328,11 @@ components:
           type: string
           nullable: true
         completed:
+          type: boolean
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        archived:
           type: boolean
         dueDate:
           type: string
@@ -294,6 +354,11 @@ components:
           nullable: true
         completed:
           type: boolean
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        archived:
+          type: boolean
         dueDate:
           type: string
           format: date
@@ -301,6 +366,38 @@ components:
         priority:
           type: string
           enum: [low, medium, high]
+    TodoStats:
+      type: object
+      required:
+        - total
+        - active
+        - archived
+        - todo
+        - inProgress
+        - done
+        - overdue
+      properties:
+        total:
+          type: integer
+          example: 8
+        active:
+          type: integer
+          example: 6
+        archived:
+          type: integer
+          example: 2
+        todo:
+          type: integer
+          example: 3
+        inProgress:
+          type: integer
+          example: 2
+        done:
+          type: integer
+          example: 1
+        overdue:
+          type: integer
+          example: 1
     ErrorResponse:
       type: object
       required:

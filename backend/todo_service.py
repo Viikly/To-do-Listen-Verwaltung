@@ -4,19 +4,25 @@ import todo_repository
 
 
 VALID_PRIORITIES = {"low", "medium", "high"}
-VALID_STATUSES = {"all", "open", "completed"}
-TODO_FIELDS = {"title", "description", "completed", "dueDate", "priority"}
+VALID_STATUSES = {"all", "todo", "in_progress", "done", "open", "completed"}
+VALID_TODO_STATUSES = {"todo", "in_progress", "done"}
+TODO_FIELDS = {"title", "description", "completed", "status", "archived", "dueDate", "priority"}
 
 
 class ValidationError(ValueError):
     pass
 
 
-def validate_filters(status, priority):
+def validate_filters(status, priority, archived, due_date, due_before, due_after):
     if status not in VALID_STATUSES:
-        raise ValidationError("Status must be one of: all, open, completed.")
+        raise ValidationError("Status must be one of: all, todo, in_progress, done.")
     if priority and priority not in VALID_PRIORITIES:
         raise ValidationError("Priority must be one of: low, medium, high.")
+    if archived not in (None, "true", "false"):
+        raise ValidationError("Archived must be true or false.")
+    validate_date(due_date)
+    validate_date(due_before)
+    validate_date(due_after)
 
 
 def validate_date(value):
@@ -56,6 +62,20 @@ def validate_todo_payload(data, require_title):
         if not isinstance(completed, bool):
             raise ValidationError("Completed must be a boolean.")
         cleaned["completed"] = completed
+        cleaned["status"] = "done" if completed else "todo"
+
+    if "status" in data:
+        status = data.get("status")
+        if status not in VALID_TODO_STATUSES:
+            raise ValidationError("Status must be one of: todo, in_progress, done.")
+        cleaned["status"] = status
+        cleaned["completed"] = status == "done"
+
+    if "archived" in data:
+        archived = data.get("archived")
+        if not isinstance(archived, bool):
+            raise ValidationError("Archived must be a boolean.")
+        cleaned["archived"] = archived
 
     if "dueDate" in data:
         cleaned["dueDate"] = validate_date(data.get("dueDate"))
@@ -68,12 +88,26 @@ def validate_todo_payload(data, require_title):
     elif require_title:
         cleaned["priority"] = "medium"
 
+    if require_title and "status" not in cleaned:
+        cleaned["status"] = "todo"
+        cleaned["completed"] = False
+    if require_title and "archived" not in cleaned:
+        cleaned["archived"] = False
+
     return cleaned
 
 
-def list_todos(status="all", priority=None, query=None):
-    validate_filters(status, priority)
-    return todo_repository.find_all(status=status, priority=priority, query=query)
+def list_todos(status="all", priority=None, query=None, archived="false", due_date=None, due_before=None, due_after=None):
+    validate_filters(status, priority, archived, due_date, due_before, due_after)
+    return todo_repository.find_all(
+        status=status,
+        priority=priority,
+        query=query,
+        archived=archived,
+        due_date=due_date,
+        due_before=due_before,
+        due_after=due_after,
+    )
 
 
 def get_todo(todo_id):
@@ -103,6 +137,8 @@ def patch_todo(todo_id, payload):
         "title": data.get("title", existing["title"]),
         "description": data.get("description", existing["description"]),
         "completed": data.get("completed", existing["completed"]),
+        "status": data.get("status", existing["status"]),
+        "archived": data.get("archived", existing["archived"]),
         "dueDate": data.get("dueDate", existing["dueDate"]),
         "priority": data.get("priority", existing["priority"]),
     }
@@ -111,3 +147,7 @@ def patch_todo(todo_id, payload):
 
 def delete_todo(todo_id):
     return todo_repository.delete(todo_id)
+
+
+def get_statistics():
+    return todo_repository.get_statistics()

@@ -39,6 +39,10 @@ export async function getTodo(id) {
   return await request(`/todos/${id}`);
 }
 
+export async function getTodoStats() {
+  return await request("/todos/stats");
+}
+
 export async function createTodo(todo) {
   return await request("/todos", {
     method: "POST",

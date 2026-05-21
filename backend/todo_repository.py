@@ -16,6 +16,8 @@ def row_to_todo(row):
         "title": row["title"],
         "description": row["description"],
         "completed": bool(row["completed"]),
+        "status": row["status"],
+        "archived": bool(row["archived"]),
         "dueDate": row["due_date"],
         "priority": row["priority"],
         "createdAt": row["created_at"],
@@ -23,18 +25,36 @@ def row_to_todo(row):
     }
 
 
-def find_all(status="all", priority=None, query=None):
+def find_all(status="all", priority=None, query=None, archived="false", due_date=None, due_before=None, due_after=None):
     sql = "SELECT * FROM todos WHERE 1 = 1"
     params = []
 
     if status == "open":
-        sql += " AND completed = 0"
+        sql += " AND status != 'done'"
     elif status == "completed":
-        sql += " AND completed = 1"
+        sql += " AND status = 'done'"
+    elif status != "all":
+        sql += " AND status = ?"
+        params.append(status)
+
+    if archived == "true":
+        sql += " AND archived = 1"
+    elif archived == "false":
+        sql += " AND archived = 0"
 
     if priority:
         sql += " AND priority = ?"
         params.append(priority)
+
+    if due_date:
+        sql += " AND due_date = ?"
+        params.append(due_date)
+    if due_before:
+        sql += " AND due_date IS NOT NULL AND due_date <= ?"
+        params.append(due_before)
+    if due_after:
+        sql += " AND due_date IS NOT NULL AND due_date >= ?"
+        params.append(due_after)
 
     if query:
         sql += " AND (LOWER(title) LIKE ? OR LOWER(COALESCE(description, '')) LIKE ?)"
@@ -59,13 +79,15 @@ def insert(data):
     with get_connection() as connection:
         cursor = connection.execute(
             """
-            INSERT INTO todos (title, description, completed, due_date, priority, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO todos (title, description, completed, status, archived, due_date, priority, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data["title"],
                 data.get("description"),
                 int(data.get("completed", False)),
+                data.get("status", "todo"),
+                int(data.get("archived", False)),
                 data.get("dueDate"),
                 data.get("priority", "medium"),
                 timestamp,
@@ -82,13 +104,15 @@ def replace(todo_id, data):
         result = connection.execute(
             """
             UPDATE todos
-            SET title = ?, description = ?, completed = ?, due_date = ?, priority = ?, updated_at = ?
+            SET title = ?, description = ?, completed = ?, status = ?, archived = ?, due_date = ?, priority = ?, updated_at = ?
             WHERE id = ?
             """,
             (
                 data["title"],
                 data.get("description"),
                 int(data.get("completed", False)),
+                data.get("status", "todo"),
+                int(data.get("archived", False)),
                 data.get("dueDate"),
                 data.get("priority", "medium"),
                 timestamp,
@@ -104,3 +128,30 @@ def delete(todo_id):
     with get_connection() as connection:
         result = connection.execute("DELETE FROM todos WHERE id = ?", (todo_id,))
     return result.rowcount > 0
+
+
+def get_statistics():
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN archived = 0 THEN 1 ELSE 0 END) AS active,
+                SUM(CASE WHEN archived = 1 THEN 1 ELSE 0 END) AS archived,
+                SUM(CASE WHEN archived = 0 AND status = 'todo' THEN 1 ELSE 0 END) AS todo,
+                SUM(CASE WHEN archived = 0 AND status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress,
+                SUM(CASE WHEN archived = 0 AND status = 'done' THEN 1 ELSE 0 END) AS done,
+                SUM(CASE WHEN archived = 0 AND status != 'done' AND due_date IS NOT NULL AND due_date < DATE('now') THEN 1 ELSE 0 END) AS overdue
+            FROM todos
+            """
+        ).fetchone()
+
+    return {
+        "total": row["total"] or 0,
+        "active": row["active"] or 0,
+        "archived": row["archived"] or 0,
+        "todo": row["todo"] or 0,
+        "inProgress": row["in_progress"] or 0,
+        "done": row["done"] or 0,
+        "overdue": row["overdue"] or 0,
+    }

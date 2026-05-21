@@ -19,6 +19,8 @@ const form = reactive({
   description: "",
   dueDate: "",
   priority: "medium",
+  status: "todo",
+  archived: false,
   completed: false,
 });
 
@@ -32,6 +34,8 @@ async function loadTodo() {
     form.description = todo.description || "";
     form.dueDate = todo.dueDate || "";
     form.priority = todo.priority || "medium";
+    form.status = todo.status || (todo.completed ? "done" : "todo");
+    form.archived = todo.archived;
     form.completed = todo.completed;
   } catch (err) {
     error.value = err.message;
@@ -50,7 +54,8 @@ async function saveTodo() {
       description: form.description || null,
       dueDate: form.dueDate || null,
       priority: form.priority,
-      completed: form.completed,
+      status: form.status,
+      archived: form.archived,
     });
     router.push("/todos");
   } catch (err) {
@@ -107,10 +112,18 @@ onMounted(loadTodo);
             <option value="high">High</option>
           </select>
         </div>
-        <div class="col-12">
+        <div class="col-md-6">
+          <label class="form-label" for="edit-status">Status</label>
+          <select id="edit-status" v-model="form.status" class="form-select">
+            <option value="todo">To-do</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="col-12 d-flex gap-4 flex-wrap">
           <div class="form-check">
-            <input id="edit-completed" v-model="form.completed" class="form-check-input" type="checkbox">
-            <label class="form-check-label" for="edit-completed">Completed</label>
+            <input id="edit-archived" v-model="form.archived" class="form-check-input" type="checkbox">
+            <label class="form-check-label" for="edit-archived">Archived</label>
           </div>
         </div>
         <div class="col-12 d-flex gap-2 flex-wrap">

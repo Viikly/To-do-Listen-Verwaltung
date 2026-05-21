@@ -39,11 +39,20 @@ def get_todos():
             status=request.args.get("status", "all"),
             priority=request.args.get("priority"),
             query=request.args.get("q"),
+            archived=request.args.get("archived", "false"),
+            due_date=request.args.get("dueDate"),
+            due_before=request.args.get("dueBefore"),
+            due_after=request.args.get("dueAfter"),
         )
     except ValidationError as exc:
         return error_response("ValidationError", str(exc), 400)
 
     return jsonify(todos)
+
+
+@api.get("/api/todos/stats")
+def get_todo_stats():
+    return jsonify(todo_service.get_statistics())
 
 
 @api.get("/api/todos/<int:todo_id>")
