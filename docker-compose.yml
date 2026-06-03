@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      TODO_DATABASE_PATH: /data/todos.db
+    volumes:
+      - backend_data:/data
+    expose:
+      - "5000"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  backend_data:
