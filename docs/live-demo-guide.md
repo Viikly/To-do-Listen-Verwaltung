@@ -20,7 +20,7 @@ Show that the application is a complete API-first web application:
 Start from a clean terminal in the project root:
 
 ```powershell
-cd E:\HSBI资料\Web\To-do
+cd To-do-Listen-Verwaltung\
 ```
 
 Check Git status if needed:
