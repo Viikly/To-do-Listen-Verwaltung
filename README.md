@@ -44,6 +44,7 @@ http://localhost:5000/api/openapi.yaml
 ```text
 .
 backend/
+  Dockerfile
   app.py
   routes.py
   todo_service.py
@@ -62,6 +63,11 @@ frontend/
     services/
     views/
     assets/
+nginx/
+  Dockerfile
+  nginx.conf
+  certs/
+docker-compose.yml
 .gitignore
 README.md
 ```
@@ -163,6 +169,73 @@ done
 ```
 
 Todos can also be archived and restored. Archived todos are hidden from the active list by default and can be shown with the archive filter.
+
+## Reverse Proxy and HTTPS Setup
+
+This project includes an nginx reverse proxy setup for the HTTPS assignment.
+
+In this setup:
+
+- nginx serves the built Vue frontend.
+- nginx redirects HTTP requests on port `80` to HTTPS on port `443`.
+- HTTPS terminates at nginx with a local self-signed certificate.
+- nginx forwards `/api/` requests to the Flask backend over plain HTTP inside the Docker network.
+- Flask still runs as an HTTP service and does not handle HTTPS directly.
+
+Generate the local self-signed certificate:
+
+```powershell
+$env:OPENSSL_CONF='NUL'
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 `
+  -keyout nginx/certs/localhost.key `
+  -out nginx/certs/localhost.crt `
+  -subj "/C=DE/ST=NRW/L=Bielefeld/O=WebTech/OU=Development/CN=localhost"
+```
+
+macOS/Linux:
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/certs/localhost.key \
+  -out nginx/certs/localhost.crt \
+  -subj "/C=DE/ST=NRW/L=Bielefeld/O=WebTech/OU=Development/CN=localhost"
+```
+
+The generated certificate and key are ignored by Git:
+
+```text
+nginx/certs/localhost.crt
+nginx/certs/localhost.key
+```
+
+Start the Docker Compose setup:
+
+```bash
+docker compose up --build
+```
+
+Open the app:
+
+```text
+https://localhost/
+```
+
+The browser will show a warning because the certificate is self-signed. This is expected for local development.
+
+Check the HTTP to HTTPS redirect:
+
+```bash
+curl -I http://localhost
+```
+
+Check the API through nginx:
+
+```bash
+curl -k https://localhost/api/todos
+curl -k https://localhost/api/todos/stats
+```
+
+The `-k` option is needed because the certificate is self-signed.
 
 ## API Endpoints
 
