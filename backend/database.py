@@ -1,4 +1,5 @@
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
 
@@ -6,10 +7,15 @@ import sqlite3
 DATABASE_PATH = Path(os.environ.get("TODO_DATABASE_PATH", Path(__file__).with_name("todos.db")))
 
 
+@contextmanager
 def get_connection():
     connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        with connection:
+            yield connection
+    finally:
+        connection.close()
 
 
 def init_db():
