@@ -39,6 +39,16 @@ When the backend is running, the OpenAPI file is also available at:
 http://localhost:5000/api/openapi.yaml
 ```
 
+## Project Documentation
+
+Additional project documentation:
+
+| Document | Purpose |
+|---|---|
+| `docs/project-concept.md` | User stories, acceptance criteria, and API concept |
+| `docs/presentation-outline.md` | Suggested structure for the final presentation PDF |
+| `docs/live-demo-guide.md` | Step-by-step Live-Demo flow and fallback plan |
+
 ## Project Structure
 
 ```text
@@ -67,6 +77,10 @@ nginx/
   Dockerfile
   nginx.conf
   certs/
+docs/
+  project-concept.md
+  presentation-outline.md
+  live-demo-guide.md
 docker-compose.yml
 .gitignore
 README.md
@@ -113,7 +127,7 @@ GET http://localhost:5000/
 
 The backend tests use `pytest` and an isolated temporary SQLite database. They do not use or modify the local `backend/todos.db` file.
 
-Install backend dependencies, including the test dependency:
+Install backend dependencies, including the test dependencies:
 
 ```bash
 cd backend
@@ -124,6 +138,18 @@ Run the tests:
 
 ```bash
 pytest
+```
+
+Run the tests with a coverage report:
+
+```bash
+pytest --cov=. --cov-report=term-missing --cov-report=html
+```
+
+The terminal output shows line coverage with missing lines. The HTML coverage report is generated at:
+
+```text
+backend/coverage/html/index.html
 ```
 
 The test suite covers:
