@@ -4,6 +4,7 @@ info:
   version: 1.0.0
   description: REST API for an API-first to-do list application using Flask and SQLite.
 servers:
+  - url: https://localhost
   - url: http://localhost:5000
 tags:
   - name: Health

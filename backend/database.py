@@ -1,8 +1,9 @@
+import os
 from pathlib import Path
 import sqlite3
 
 
-DATABASE_PATH = Path(__file__).with_name("todos.db")
+DATABASE_PATH = Path(os.environ.get("TODO_DATABASE_PATH", Path(__file__).with_name("todos.db")))
 
 
 def get_connection():
